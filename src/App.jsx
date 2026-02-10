@@ -34,6 +34,7 @@ import Permissions from './pages/Permissions/Permissions';
 import RoleList from './components/Roles/RoleList';
 import RoleForm from './components/Roles/RoleForm';
 import PermissionAssignment from './components/Roles/PermissionAssignment';
+import LocationAassingSettings from './pages/location_assing_settings/locationAassingSettings';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -166,6 +167,7 @@ function AppRoutes() {
         {/* Workforce Routes */}
         <Route path="/workforce/shifts" element={<Shifts />} />
         <Route path="/workforce/locations" element={<Locations />} />
+        <Route path="/workforce/grouplocationsettings" element={<LocationAassingSettings/>}/>
         
         {/* Legacy workforce routes */}
         <Route path="/shifts" element={<Shifts />} />

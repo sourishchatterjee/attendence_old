@@ -14,7 +14,7 @@ const Locations = () => {
   const [organizations, setOrganizations] = useState([]);
   const [sites, setSites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterActive, setFilterActive] = useState('all');
   const [filterOrganization, setFilterOrganization] = useState('all');

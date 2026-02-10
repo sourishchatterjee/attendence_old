@@ -4,8 +4,15 @@ import { organizationAPI } from '../../services/organizationAPI';
 import RoleModal from '../../components/Roles/RoleModal';
 import RoleDetailsModal from '../../components/Roles/RoleDetailsModal';
 import Pagination from '../../components/Pagination';
+import { decodeJWT } from "../../utils/jwtHelper";
 
 const Roles = () => {
+  const getOrganizationIdFromToken = () => {
+    const token = localStorage.getItem("token");
+    const payload = decodeJWT(token);
+    return payload?.organizationId;
+  };
+
   const [roles, setRoles] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,20 +32,33 @@ const Roles = () => {
     totalPages: 0,
   });
 
-  useEffect(() => {
-    fetchOrganizations();
-  }, []);
+  const orgId = Number(getOrganizationIdFromToken());
 
   useEffect(() => {
-    fetchRoles();
-  }, [pagination.page, filterActive, filterOrganization]);
+    if (orgId && !isNaN(orgId)) {
+      fetchOrganizations();
+    }
+  }, [orgId]);
+
+  useEffect(() => {
+    if (orgId && !isNaN(orgId)) {
+      fetchRoles();
+    }
+  }, [pagination.page, filterActive, filterOrganization, orgId]);
 
   const fetchOrganizations = async () => {
     try {
-      const response = await organizationAPI.getAllOrganizations({ pageSize: 100 });
-      setOrganizations(response.data || []);
+      if (!orgId || isNaN(orgId)) {
+        console.error("Invalid organization ID:", orgId);
+        setOrganizations([]);
+        return;
+      }
+
+      const response = await organizationAPI.getOrganizationById(orgId);
+      setOrganizations(response.data ? [response.data] : []);
     } catch (err) {
       console.error('Error fetching organizations:', err);
+      setOrganizations([]);
     }
   };
 
@@ -47,20 +67,21 @@ const Roles = () => {
       setLoading(true);
       setError(null);
       
+      if (!orgId || isNaN(orgId)) {
+        setError("Invalid organization access");
+        setRoles([]);
+        setLoading(false);
+        return;
+      }
+
       const params = {
         page: pagination.page,
         pageSize: pagination.pageSize,
+        organization_id: orgId, // Always filter by user's organization
       };
       
       if (filterActive !== 'all') {
         params.is_active = filterActive === 'active';
-      }
-
-      if (filterOrganization !== 'all') {
-        const orgId = parseInt(filterOrganization, 10);
-        if (!isNaN(orgId)) {
-          params.organization_id = orgId;
-        }
       }
 
       const response = await roleAPI.getAllRoles(params);
@@ -97,6 +118,10 @@ const Roles = () => {
   };
 
   const handleCreate = () => {
+    if (!orgId || isNaN(orgId)) {
+      alert('No organization access available');
+      return;
+    }
     setSelectedRole(null);
     setIsModalOpen(true);
   };
@@ -195,6 +220,7 @@ const Roles = () => {
 
   if (loading && roles.length === 0) {
     return (
+      
       <div className="flex items-center justify-center h-screen bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>

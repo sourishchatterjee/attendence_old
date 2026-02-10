@@ -12,7 +12,7 @@ export const locationAPI = {
     try {
       const response = await apiClient.post('/locations/zones', zoneData);
       return response;
-    } catch (error) {
+    } catch (error) { 
       console.error('Create zone error:', error);
       throw error.response?.data || error;
     }

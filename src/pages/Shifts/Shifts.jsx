@@ -29,7 +29,7 @@ const Shifts = () => {
     fetchOrganizations();
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { 
     fetchShifts();
   }, [pagination.page, filterActive, filterOrganization]);
 
@@ -157,10 +157,22 @@ const Shifts = () => {
   };
 
   const getWeekOffDaysText = (weekOffDays) => {
-    if (!weekOffDays || weekOffDays.length === 0) return 'None';
-    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    return weekOffDays.map(day => days[day]).join(', ');
-  };
+  // Handle null, undefined, empty, non-array
+  if (!weekOffDays || !Array.isArray(weekOffDays) || weekOffDays.length === 0) {
+    return 'None';
+  }
+  
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  // Safe map with validation
+  const dayNames = weekOffDays
+    .filter(day => day >= 0 && day <= 6)  // Valid day numbers
+    .map(day => days[day] || `Day${day}`) // Fallback for invalid
+    .join(', ');
+    
+  return dayNames || 'None';
+};
+
 
   const filteredShifts = shifts.filter(shift =>
     shift.shift_name.toLowerCase().includes(searchTerm.toLowerCase()) ||

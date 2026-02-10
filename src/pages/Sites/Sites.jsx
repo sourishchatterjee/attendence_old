@@ -4,8 +4,22 @@ import { organizationAPI } from '../../services/organizationAPI';
 import SiteModal from '../../components/Site/SiteModal';
 import SiteDetailsModal from '../../components/Site/SiteDetailsModal';
 import Pagination from '../../components/Pagination';
+import { decodeJWT } from "../../utils/jwtHelper";
+
 
 const Sites = () => {
+
+
+const getOrganizationIdFromToken = () => {
+  const token = localStorage.getItem("token");
+  const payload = decodeJWT(token);
+ // return payload?.organization_id;
+ return payload?.organizationId;
+
+};
+
+//console.log(getOrganizationIdFromToken)
+
   const [sites, setSites] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -32,75 +46,120 @@ const Sites = () => {
     fetchSites();
   }, [pagination.page, filterActive, filterOrganization]);
 
-  const fetchOrganizations = async () => {
-    try {
-      const response = await organizationAPI.getAllOrganizations({ pageSize: 100 });
-      setOrganizations(response.data || []);
-    } catch (err) {
-      console.error('Error fetching organizations:', err);
+
+
+const fetchOrganizations = async () => {
+  try {
+    const orgId = Number(getOrganizationIdFromToken());
+
+    if (!orgId || isNaN(orgId)) {
+      console.error("Invalid organization ID:", orgId);
+      return;
     }
-  };
 
-  const fetchSites = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const params = {
-        page: pagination.page,
-        pageSize: pagination.pageSize,
-      };
-      
-      // Only add is_active if not 'all'
-      if (filterActive !== 'all') {
-        params.is_active = filterActive === 'active';
-      }
+    const response = await organizationAPI.getOrganizationById(orgId);
 
-      // Only add organization_id if not 'all' and ensure it's a valid number
-      if (filterOrganization !== 'all') {
-        const orgId = parseInt(filterOrganization, 10);
-        if (!isNaN(orgId)) {
-          params.organization_id = orgId;
-        }
-      }
+    setOrganizations(response.data ? [response.data] : []);
 
-      const response = await siteAPI.getAllSites(params);
+  } catch (err) {
+    console.error('Error fetching organizations:', err);
+  }
+};
+
+
+  // const fetchSites = async () => {
+  //   try {
+  //     setLoading(true);
+  //     setError(null);
       
-      // Handle response data structure
-      const sitesData = response.data || response || [];
-      setSites(Array.isArray(sitesData) ? sitesData : []);
+  //     const params = {
+  //       page: pagination.page,
+  //       pageSize: pagination.pageSize,
+  //     };
       
-      // Handle pagination
-      if (response.pagination) {
-        setPagination(prev => ({
-          ...prev,
-          ...response.pagination,
-        }));
-      } else {
-        // Fallback if pagination is not in response
-        setPagination(prev => ({
-          ...prev,
-          totalItems: Array.isArray(sitesData) ? sitesData.length : 0,
-          totalPages: 1,
-        }));
-      }
-    } catch (err) {
-      console.error('Fetch sites error:', err);
+  //     // Only add is_active if not 'all'
+  //     if (filterActive !== 'all') {
+  //       params.is_active = filterActive === 'active';
+  //     }
+
+  //     // Only add organization_id if not 'all' and ensure it's a valid number
+  //     if (filterOrganization !== 'all') {
+  //       const orgId = parseInt(filterOrganization, 10);
+  //       if (!isNaN(orgId)) {
+  //         params.organization_id = orgId;
+  //       }
+  //     }
+
+  //     const response = await siteAPI.getAllSites(params);
       
-      // Handle different error structures
-      if (err.errors && Array.isArray(err.errors)) {
-        const errorMessages = err.errors.map(e => `${e.field}: ${e.message}`).join(', ');
-        setError(`Validation Error: ${errorMessages}`);
-      } else {
-        setError(err.message || 'Failed to fetch sites');
-      }
+  //     // Handle response data structure
+  //     const sitesData = response.data || response || [];
+  //     setSites(Array.isArray(sitesData) ? sitesData : []);
       
-      // Set empty state on error
+  //     // Handle pagination
+  //     if (response.pagination) {
+  //       setPagination(prev => ({
+  //         ...prev,
+  //         ...response.pagination,
+  //       }));
+  //     } else {
+  //       // Fallback if pagination is not in response
+  //       setPagination(prev => ({
+  //         ...prev,
+  //         totalItems: Array.isArray(sitesData) ? sitesData.length : 0,
+  //         totalPages: 1,
+  //       }));
+  //     }
+  //   } catch (err) {
+  //     console.error('Fetch sites error:', err);
+      
+  //     // Handle different error structures
+  //     if (err.errors && Array.isArray(err.errors)) {
+  //       const errorMessages = err.errors.map(e => `${e.field}: ${e.message}`).join(', ');
+  //       setError(`Validation Error: ${errorMessages}`);
+  //     } else {
+  //       setError(err.message || 'Failed to fetch sites');
+  //     }
+      
+  //     // Set empty state on error
+  //     setSites([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+const fetchSites = async () => {
+  try {
+    setLoading(true);
+    setError(null);
+
+    const orgId = Number(getOrganizationIdFromToken());
+
+    if (!orgId || isNaN(orgId)) {
       setSites([]);
-    } finally {
-      setLoading(false);
+      setError("Invalid organization ID");
+      return;
     }
-  };
+
+    const response = await organizationAPI.getOrganizationSitesById(orgId);
+
+    const sitesData = response.data || [];
+    setSites(Array.isArray(sitesData) ? sitesData : []);
+
+    setPagination(prev => ({
+      ...prev,
+      totalItems: sitesData.length,
+      totalPages: 1
+    }));
+
+  } catch (err) {
+    console.error("Fetch sites error:", err);
+    setError(err.message || "Failed to fetch sites");
+    setSites([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleCreate = () => {
     setSelectedSite(null);
@@ -260,6 +319,7 @@ const Sites = () => {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition bg-white text-sm"
             >
               <option value="all">All Organizations</option>
+
               {organizations.map(org => (
                 <option key={org.organization_id} value={org.organization_id}>
                   {org.organization_name}

@@ -1,4 +1,300 @@
-import React, { useState, useEffect } from 'react';
+// import React, { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import { employeeAPI } from '../../services/employeeAPI';
+// import { organizationAPI } from '../../services/organizationAPI';
+// import { siteAPI } from '../../services/siteAPI';
+// import { departmentAPI } from '../../services/departmentAPI';
+// import { designationAPI } from '../../services/designationAPI';
+// import EmployeeModal from '../../components/Employee/EmployeeModal';
+// import BulkUploadModal from '../../components/Employee/BulkUploadModal';
+// import ExportModal from '../../components/Employee/ExportModal';
+// import Pagination from '../../components/Pagination';
+
+// const Employees = () => {
+//   const navigate = useNavigate();
+//   const [employees, setEmployees] = useState([]);
+//   const [organizations, setOrganizations] = useState([]);
+//   const [sites, setSites] = useState([]);
+//   const [departments, setDepartments] = useState([]);
+//   const [designations, setDesignations] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [searchTerm, setSearchTerm] = useState('');
+//   const [filterActive, setFilterActive] = useState('all');
+//   const [filterOrganization, setFilterOrganization] = useState('all');
+//   const [filterSite, setFilterSite] = useState('all');
+//   const [filterDepartment, setFilterDepartment] = useState('all');
+//   const [filterDesignation, setFilterDesignation] = useState('all');
+//   const [filterEmploymentType, setFilterEmploymentType] = useState('all');
+//   const [isModalOpen, setIsModalOpen] = useState(false);
+//   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+//   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+//   const [selectedEmployee, setSelectedEmployee] = useState(null);
+//   const [showFilterPanel, setShowFilterPanel] = useState(false);
+//   const [selectedEmployees, setSelectedEmployees] = useState(new Set());
+//   const [pagination, setPagination] = useState({
+//     page: 1,
+//     pageSize: 10,
+//     totalItems: 0,
+//     totalPages: 0,
+//   });
+
+//   useEffect(() => {
+//     fetchOrganizations();
+//     fetchDesignations();
+//   }, []);
+
+//   useEffect(() => {
+//     if (filterOrganization !== 'all') {
+//       fetchSitesByOrganization(filterOrganization);
+//       fetchDepartmentsByOrganization(filterOrganization);
+//     } else {
+//       setSites([]);
+//       setDepartments([]);
+//       setFilterSite('all');
+//       setFilterDepartment('all');
+//     }
+//   }, [filterOrganization]);
+
+//   useEffect(() => {
+//     fetchEmployees();
+//   }, [pagination.page, filterActive, filterOrganization, filterSite, filterDepartment, filterDesignation, filterEmploymentType]);
+
+//   const fetchOrganizations = async () => {
+//     try {
+//       const response = await organizationAPI.getAllOrganizations({ pageSize: 100 });
+//       setOrganizations(response.data || []);
+//     } catch (err) {
+//       console.error('Error fetching organizations:', err);
+//     }
+//   };
+
+//   const fetchSitesByOrganization = async (orgId) => {
+//     try {
+//       const response = await siteAPI.getAllSites({ 
+//         organization_id: parseInt(orgId, 10),
+//         pageSize: 100 
+//       });
+//       setSites(response.data || []);
+//     } catch (err) {
+//       console.error('Error fetching sites:', err);
+//       setSites([]);
+//     }
+//   };
+
+//   const fetchDepartmentsByOrganization = async (orgId) => {
+//     try {
+//       const response = await departmentAPI.getAllDepartments({ 
+//         organization_id: parseInt(orgId, 10),
+//         pageSize: 100 
+//       });
+//       setDepartments(response.data || []);
+//     } catch (err) {
+//       console.error('Error fetching departments:', err);
+//       setDepartments([]);
+//     }
+//   };
+
+//   const fetchDesignations = async () => {
+//     try {
+//       const response = await designationAPI.getAllDesignations({ pageSize: 100 });
+//       setDesignations(response.data || []);
+//     } catch (err) {
+//       console.error('Error fetching designations:', err);
+//     }
+//   };
+
+//   const fetchEmployees = async () => {
+//     try {
+//       setLoading(true);
+//       setError(null);
+      
+//       const params = {
+//         page: pagination.page,
+//         pageSize: pagination.pageSize,
+//         search: searchTerm || undefined,
+//       };
+      
+//       if (filterActive !== 'all') {
+//         params.is_active = filterActive === 'active';
+//       }
+
+//       if (filterOrganization !== 'all') {
+//         params.organization_id = parseInt(filterOrganization, 10);
+//       }
+
+//       if (filterSite !== 'all') {
+//         params.site_id = parseInt(filterSite, 10);
+//       }
+
+//       if (filterDepartment !== 'all') {
+//         params.department_id = parseInt(filterDepartment, 10);
+//       }
+
+//       if (filterDesignation !== 'all') {
+//         params.designation_id = parseInt(filterDesignation, 10);
+//       }
+
+//       if (filterEmploymentType !== 'all') {
+//         params.employment_type = filterEmploymentType;
+//       }
+
+//       const response = await employeeAPI.getAllEmployees(params);
+      
+//       const employeesData = response.data || response || [];
+//       setEmployees(Array.isArray(employeesData) ? employeesData : []);
+      
+//       if (response.pagination) {
+//         setPagination(prev => ({
+//           ...prev,
+//           ...response.pagination,
+//         }));
+//       } else {
+//         setPagination(prev => ({
+//           ...prev,
+//           totalItems: Array.isArray(employeesData) ? employeesData.length : 0,
+//           totalPages: 1,
+//         }));
+//       }
+//     } catch (err) {
+//       console.error('Fetch employees error:', err);
+      
+//       if (err.errors && Array.isArray(err.errors)) {
+//         const errorMessages = err.errors.map(e => `${e.field}: ${e.message}`).join(', ');
+//         setError(`Validation Error: ${errorMessages}`);
+//       } else {
+//         setError(err.message || 'Failed to fetch employees');
+//       }
+      
+//       setEmployees([]);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleSearch = (e) => {
+//     setSearchTerm(e.target.value);
+//     setPagination(prev => ({ ...prev, page: 1 }));
+    
+//     // Debounce search
+//     const timeoutId = setTimeout(() => {
+//       fetchEmployees();
+//     }, 500);
+    
+//     return () => clearTimeout(timeoutId);
+//   };
+
+//   const handleCreate = () => {
+//     setSelectedEmployee(null);
+//     setIsModalOpen(true);
+//   };
+
+//   const handleEdit = (employee) => {
+//     setSelectedEmployee(employee);
+//     setIsModalOpen(true);
+//   };
+
+
+//   const handleView = (employeeId) => {
+//     //navigate(`/employees/${employeeId}`);
+//     console.log(`employeeId ${employeeId}`)
+//   };
+
+
+//   const handleDelete = async (employeeId, employeeName) => {
+//     if (window.confirm(`Are you sure you want to delete employee "${employeeName}"?`)) {
+//       try {
+//         await employeeAPI.deleteEmployee(employeeId);
+//         showNotification('Employee deleted successfully', 'success');
+//         fetchEmployees();
+//       } catch (err) {
+//         console.error('Delete employee error:', err);
+//         if (err.errors && Array.isArray(err.errors)) {
+//           const errorMessages = err.errors.map(e => e.message).join(', ');
+//           showNotification(`Error: ${errorMessages}`, 'error');
+//         } else {
+//           showNotification(err.message || 'Failed to delete employee', 'error');
+//         }
+//       }
+//     }
+//   };
+
+//   const handleSelectEmployee = (employeeId) => {
+//     setSelectedEmployees(prev => {
+//       const newSet = new Set(prev);
+//       if (newSet.has(employeeId)) {
+//         newSet.delete(employeeId);
+//       } else {
+//         newSet.add(employeeId);
+//       }
+//       return newSet;
+//     });
+//   };
+
+//   const handleSelectAll = () => {
+//     if (selectedEmployees.size === employees.length) {
+//       setSelectedEmployees(new Set());
+//     } else {
+//       setSelectedEmployees(new Set(employees.map(emp => emp.employee_id)));
+//     }
+//   };
+
+//   const handleModalClose = () => {
+//     setIsModalOpen(false);
+//     setSelectedEmployee(null);
+//   };
+
+//   const handleModalSuccess = () => {
+//     setIsModalOpen(false);
+//     setSelectedEmployee(null);
+//     fetchEmployees();
+//   };
+
+//   const handleDownloadTemplate = async () => {
+//     try {
+//       await employeeAPI.downloadTemplate();
+//       showNotification('Template downloaded successfully', 'success');
+//     } catch (err) {
+//       console.error('Download template error:', err);
+//       showNotification('Failed to download template', 'error');
+//     }
+//   };
+
+//   const showNotification = (message, type) => {
+//     if (type === 'error') {
+//       alert(`❌ ${message}`);
+//     } else {
+//       alert(`✅ ${message}`);
+//     }
+//   };
+
+//   const getEmploymentTypeBadge = (type) => {
+//     const types = {
+//       'Full-Time': 'bg-green-100 text-green-800',
+//       'Part-Time': 'bg-blue-100 text-blue-800',
+//       'Contract': 'bg-orange-100 text-orange-800',
+//       'Intern': 'bg-purple-100 text-purple-800',
+//       'Consultant': 'bg-pink-100 text-pink-800',
+//     };
+//     return types[type] || 'bg-gray-100 text-gray-800';
+//   };
+
+//   if (loading && employees.length === 0) {
+//     return (
+//       <div className="flex items-center justify-center h-screen bg-gray-50">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
+//           <p className="text-gray-500 mt-4">Loading employees...</p>
+//         </div>
+//       </div>
+//     );
+//   }
+
+
+
+
+
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { employeeAPI } from '../../services/employeeAPI';
 import { organizationAPI } from '../../services/organizationAPI';
@@ -9,9 +305,17 @@ import EmployeeModal from '../../components/Employee/EmployeeModal';
 import BulkUploadModal from '../../components/Employee/BulkUploadModal';
 import ExportModal from '../../components/Employee/ExportModal';
 import Pagination from '../../components/Pagination';
+import { decodeJWT } from "../../utils/jwtHelper";
 
 const Employees = () => {
   const navigate = useNavigate();
+  
+  const getOrganizationIdFromToken = () => {
+    const token = localStorage.getItem("token");
+    const payload = decodeJWT(token);
+    return payload?.organizationId;
+  };
+
   const [employees, setEmployees] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [sites, setSites] = useState([]);
@@ -39,13 +343,17 @@ const Employees = () => {
     totalPages: 0,
   });
 
-  useEffect(() => {
-    fetchOrganizations();
-    fetchDesignations();
-  }, []);
+  const orgId = Number(getOrganizationIdFromToken());
 
   useEffect(() => {
-    if (filterOrganization !== 'all') {
+    if (orgId && !isNaN(orgId)) {
+      fetchOrganizations();
+      fetchDesignationsByOrg();
+    }
+  }, [orgId]);
+
+  useEffect(() => {
+    if (orgId && !isNaN(orgId) && filterOrganization !== 'all') {
       fetchSitesByOrganization(filterOrganization);
       fetchDepartmentsByOrganization(filterOrganization);
     } else {
@@ -54,25 +362,34 @@ const Employees = () => {
       setFilterSite('all');
       setFilterDepartment('all');
     }
-  }, [filterOrganization]);
+  }, [filterOrganization, orgId]);
 
   useEffect(() => {
-    fetchEmployees();
-  }, [pagination.page, filterActive, filterOrganization, filterSite, filterDepartment, filterDesignation, filterEmploymentType]);
+    if (orgId && !isNaN(orgId)) {
+      fetchEmployees();
+    }
+  }, [pagination.page, filterActive, filterOrganization, filterSite, filterDepartment, filterDesignation, filterEmploymentType, orgId]);
 
   const fetchOrganizations = async () => {
     try {
-      const response = await organizationAPI.getAllOrganizations({ pageSize: 100 });
-      setOrganizations(response.data || []);
+      if (!orgId || isNaN(orgId)) {
+        console.error("Invalid organization ID:", orgId);
+        setOrganizations([]);
+        return;
+      }
+
+      const response = await organizationAPI.getOrganizationById(orgId);
+      setOrganizations(response.data ? [response.data] : []);
     } catch (err) {
       console.error('Error fetching organizations:', err);
+      setOrganizations([]);
     }
   };
 
-  const fetchSitesByOrganization = async (orgId) => {
+  const fetchSitesByOrganization = async (orgIdParam) => {
     try {
       const response = await siteAPI.getAllSites({ 
-        organization_id: parseInt(orgId, 10),
+        organization_id: parseInt(orgIdParam, 10),
         pageSize: 100 
       });
       setSites(response.data || []);
@@ -82,10 +399,10 @@ const Employees = () => {
     }
   };
 
-  const fetchDepartmentsByOrganization = async (orgId) => {
+  const fetchDepartmentsByOrganization = async (orgIdParam) => {
     try {
       const response = await departmentAPI.getAllDepartments({ 
-        organization_id: parseInt(orgId, 10),
+        organization_id: parseInt(orgIdParam, 10),
         pageSize: 100 
       });
       setDepartments(response.data || []);
@@ -95,12 +412,20 @@ const Employees = () => {
     }
   };
 
-  const fetchDesignations = async () => {
+  const fetchDesignationsByOrg = async () => {
     try {
-      const response = await designationAPI.getAllDesignations({ pageSize: 100 });
+      if (!orgId || isNaN(orgId)) {
+        setDesignations([]);
+        return;
+      }
+      const response = await designationAPI.getAllDesignations({ 
+        organization_id: orgId,
+        pageSize: 100 
+      });
       setDesignations(response.data || []);
     } catch (err) {
       console.error('Error fetching designations:', err);
+      setDesignations([]);
     }
   };
 
@@ -109,18 +434,22 @@ const Employees = () => {
       setLoading(true);
       setError(null);
       
+      if (!orgId || isNaN(orgId)) {
+        setError("Invalid organization access");
+        setEmployees([]);
+        setLoading(false);
+        return;
+      }
+
       const params = {
         page: pagination.page,
         pageSize: pagination.pageSize,
+        organization_id: orgId, // Always filter by user's organization
         search: searchTerm || undefined,
       };
       
       if (filterActive !== 'all') {
         params.is_active = filterActive === 'active';
-      }
-
-      if (filterOrganization !== 'all') {
-        params.organization_id = parseInt(filterOrganization, 10);
       }
 
       if (filterSite !== 'all') {
@@ -172,19 +501,23 @@ const Employees = () => {
     }
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = useCallback((e) => {
     setSearchTerm(e.target.value);
     setPagination(prev => ({ ...prev, page: 1 }));
-    
+
     // Debounce search
     const timeoutId = setTimeout(() => {
       fetchEmployees();
     }, 500);
-    
+
     return () => clearTimeout(timeoutId);
-  };
+  }, []);
 
   const handleCreate = () => {
+    if (!orgId || isNaN(orgId)) {
+      alert('No organization access available');
+      return;
+    }
     setSelectedEmployee(null);
     setIsModalOpen(true);
   };
@@ -195,7 +528,8 @@ const Employees = () => {
   };
 
   const handleView = (employeeId) => {
-    navigate(`/employees/${employeeId}`);
+    console.log(`employeeId ${employeeId}`);
+    // navigate(`/employees/${employeeId}`);
   };
 
   const handleDelete = async (employeeId, employeeName) => {
@@ -286,6 +620,7 @@ const Employees = () => {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -762,6 +1097,9 @@ const Employees = () => {
           )}
         </div>
       </div>
+
+
+      
 
       {/* Modals */}
       {isModalOpen && (

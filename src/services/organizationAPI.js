@@ -1,3 +1,4 @@
+
 import apiClient from './api';
 
 export const organizationAPI = {
@@ -31,6 +32,7 @@ export const organizationAPI = {
     }
   },
 
+
   /**
    * Get organization by ID
    * GET /organizations/:id
@@ -46,6 +48,21 @@ export const organizationAPI = {
     }
   },
 
+        
+  getOrganizationSitesById: async (id) => {
+    try { 
+   //   /sites/:id
+   const response = await apiClient.get(`/organizations/sites/${id}`);
+      return response;
+      
+    } catch (error) {
+      console.error('Get organization-site error:', error);
+      throw error.response?.data || error;
+      
+    }
+    
+  },
+  
   /**
    * Update organization
    * PUT /organizations/:id
